@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.marianodato.android_nexttime">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Base">
+        <meta-data
+            android:name="com.example.marianodato.android_nexttime.version"
+            android:value="@integer/google_play_services_version" />
+
+        <activity
+            android:name="com.example.marianodato.android_nexttime.MainActivity"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name="com.example.marianodato.android_nexttime.GeofenceBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <service
+            android:name="com.example.marianodato.android_nexttime.GeofenceTransitionsJobIntentService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name="com.example.marianodato.android_nexttime.AddGeofencesService"
+            android:label="Test service" />
+
+        <!--
+        <receiver android:name="testpackage.MyStartServiceReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="testpackage.TestJobService"
+            android:label="Word service"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name="testpackage.LocalWordService"
+            android:label="Word service" />
+        -->
+
+    </application>
+</manifest>
