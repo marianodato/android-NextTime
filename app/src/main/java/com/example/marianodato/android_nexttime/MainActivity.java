@@ -2,9 +2,11 @@ package com.example.marianodato.android_nexttime;
 
 import android.Manifest;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -19,6 +21,8 @@ import androidx.annotation.NonNull;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -61,6 +65,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     //private Button mAddGeofencesButton;
     private Button mRemoveGeofencesButton;
 
+    public static final String FILTER = "just.a.filter";
+    public static final String KEY = "key";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +82,25 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         mGeofencingClient = LocationServices.getGeofencingClient(this);
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.w(TAG, intent.getStringExtra(KEY));
+                Toast.makeText(MainActivity.this, intent.getStringExtra(KEY), Toast.LENGTH_SHORT).show();
+                if (!intent.getStringExtra(KEY).equals(getString(R.string.geofences_added))){
+                    if (mBound) {
+                        unbindService();
+                        mBound = false;
+                    }
+                }
+
+            }
+        }, new IntentFilter(FILTER));
+
+    }
+
+    private void unbindService() {
+        unbindService(this);
     }
 
     @Override
@@ -84,6 +110,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         if (!checkPermissions()) {
             requestPermissions();
         } else {
+            if (mBound){
+                String responseMessage = service.addSavedGeofences();
+                if (responseMessage != null && responseMessage.equals(getString(R.string.insufficient_permissions))){
+                    showSnackbar(responseMessage);
+                }
+            }
             Intent intent= new Intent(this, AddGeofencesService.class);
             bindService(intent, this, Context.BIND_AUTO_CREATE);
         }
@@ -97,8 +129,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         String responseMessage = service.addSavedGeofences();
         if (responseMessage != null && responseMessage.equals(getString(R.string.insufficient_permissions))){
             showSnackbar(responseMessage);
-        }else if (responseMessage != null){
-            Toast.makeText(this, responseMessage, Toast.LENGTH_SHORT).show();
         }
         mBound = true;
     }
@@ -118,9 +148,10 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             return;
         }
         removeGeofences();
-        if (mBound)
+        if (mBound) {
             unbindService(this);
-        mBound = false;
+            mBound = false;
+        }
     }
 
     /**
@@ -279,7 +310,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i(TAG, "Permission granted.");
-
+                if (mBound){
+                    String responseMessage = service.addSavedGeofences();
+                    if (responseMessage != null && responseMessage.equals(getString(R.string.insufficient_permissions))){
+                        showSnackbar(responseMessage);
+                    }
+                }
                 Intent intent= new Intent(this, AddGeofencesService.class);
                 bindService(intent, this, Context.BIND_AUTO_CREATE);
             } else {
@@ -309,9 +345,10 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                 startActivity(intent);
                             }
                         });
-                if (mBound)
+                if (mBound) {
                     unbindService(this);
-                mBound = false;
+                    mBound = false;
+                }
             }
         }
     }

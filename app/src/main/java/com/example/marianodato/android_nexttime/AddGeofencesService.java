@@ -24,6 +24,7 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class AddGeofencesService extends Service implements OnCompleteListener<Void> {
     private final IBinder mBinder = new MyBinder();
@@ -46,10 +47,10 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
     private PendingIntent mGeofencePendingIntent;
     private String responseMessage;
 
-    /*@Override
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return Service.START_NOT_STICKY;
-    }*/
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -119,7 +120,6 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
         if (!checkPermissions()) {
             responseMessage = getString(R.string.insufficient_permissions);
             Log.w(TAG, responseMessage);
-            //showSnackbar(responseMessage);
             return;
         }
 
@@ -177,15 +177,17 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
 
             int messageId = getGeofencesAdded() ? R.string.geofences_added :
                     R.string.geofences_removed;
-            responseMessage = getString(messageId);
             Log.w(TAG, getString(messageId));
-            //Toast.makeText(this, responseMessage, Toast.LENGTH_SHORT).show();
+            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(
+                    new Intent(MainActivity.FILTER).putExtra(MainActivity.KEY, getString(messageId))
+            );
         } else {
             // Get the status code for the error and log it using a user-friendly message.
             String errorMessage = GeofenceErrorMessages.getErrorString(this, task.getException());
-            responseMessage = errorMessage;
             Log.w(TAG, errorMessage);
-            //Toast.makeText(this, responseMessage, Toast.LENGTH_SHORT).show();
+            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(
+                    new Intent(MainActivity.FILTER).putExtra(MainActivity.KEY, errorMessage)
+            );
         }
     }
 
