@@ -1,2 +1,1 @@
-# android-NextTime
-Android NextTime Project
+# Android NextTime Project
