@@ -130,7 +130,7 @@ public class GeofenceService extends Service implements OnCompleteListener<Void>
     private void addGeofences() {
         if (!checkPermissions()) {
             responseMessage = getString(R.string.insufficient_permissions);
-            Log.w(TAG, responseMessage);
+            Log.e(TAG, responseMessage);
             return;
         }
 
@@ -147,7 +147,7 @@ public class GeofenceService extends Service implements OnCompleteListener<Void>
     private void removeGeofences() {
         if (!checkPermissions()) {
             responseMessage = getString(R.string.insufficient_permissions);
-            Log.w(TAG, responseMessage);
+            Log.e(TAG, responseMessage);
             return;
         }
 
@@ -209,18 +209,20 @@ public class GeofenceService extends Service implements OnCompleteListener<Void>
 
             int messageId = getGeofencesAdded() ? R.string.geofences_added :
                     R.string.geofences_removed;
-            Log.w(TAG, getString(messageId));
-            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(
-                    new Intent(Constants.FILTER).putExtra(Constants.KEY, getString(messageId))
-            );
+            Log.i(TAG, getString(messageId));
+            sendMessage(getString(messageId));
         } else {
             // Get the status code for the error and log it using a user-friendly message.
             String errorMessage = GeofenceErrorMessages.getErrorString(this, task.getException());
-            Log.w(TAG, errorMessage);
-            LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(
-                    new Intent(Constants.FILTER).putExtra(Constants.KEY, errorMessage)
-            );
+            Log.e(TAG, errorMessage);
+            sendMessage(errorMessage);
         }
+    }
+
+    private void sendMessage(String message){
+        LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(
+                new Intent(Constants.FILTER).putExtra(Constants.KEY, message)
+        );
     }
 
     /**

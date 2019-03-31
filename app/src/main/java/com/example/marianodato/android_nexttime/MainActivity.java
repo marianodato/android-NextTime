@@ -42,7 +42,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private boolean serviceBinded = false;
     private GeofenceService service;
     private String geofencingAction;
     private Menu menu;
@@ -59,61 +58,43 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.w(TAG, intent.getStringExtra(Constants.KEY));
                 Toast.makeText(MainActivity.this, intent.getStringExtra(Constants.KEY), Toast.LENGTH_SHORT).show();
-                if (!intent.getStringExtra(Constants.KEY).equals(getString(R.string.geofences_added)) || !intent.getStringExtra(Constants.KEY).equals(getString(R.string.geofences_removed))){
-                    if (serviceBinded) {
-                        unbindService();
-                        serviceBinded = false;
-                    }
-                }
-
             }
         }, new IntentFilter(Constants.FILTER));
 
     }
 
-    private void unbindService() {
-        unbindService(this);
-    }
-
     @Override
     public void onStart() {
         super.onStart();
-
         if (!checkPermissions()) {
             requestPermissions();
         } else {
-            if (serviceBinded){
-                String responseMessage = service.addSavedGeofences();
-                if (responseMessage != null && responseMessage.equals(getString(R.string.insufficient_permissions))){
-                    showSnackbar(responseMessage);
-                }
-            }else{
-                Intent intent= new Intent(this, GeofenceService.class);
-                bindService(intent, this, Context.BIND_AUTO_CREATE);
-                geofencingAction = Constants.ADD;
-            }
+            startService(Constants.ADD);
         }
+    }
+
+    private void startService(String operation){
+        Intent intent= new Intent(this, GeofenceService.class);
+        bindService(intent, this, Context.BIND_AUTO_CREATE);
+        geofencingAction = operation;
     }
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
         GeofenceService.MyBinder b = (GeofenceService.MyBinder) binder;
         service = b.getService();
-        Log.w(TAG,  "Connected to Service");
+        Log.i(TAG,  "Connected to Service");
         String responseMessage;
         if(geofencingAction.equals(Constants.ADD)){
             responseMessage = service.addSavedGeofences();
-            serviceBinded = true;
         }else{
             responseMessage = service.removeSavedGeofences();
-            unbindService(this);
-            serviceBinded = false;
         }
         if (responseMessage != null && responseMessage.equals(getString(R.string.insufficient_permissions))) {
             showSnackbar(responseMessage);
         }
+        unbindService(this);
 
     }
 
@@ -138,18 +119,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     requestPermissions();
                     return true;
                 }
-                if (serviceBinded) {
-                    String responseMessage = service.removeSavedGeofences();
-                    if (responseMessage != null && responseMessage.equals(getString(R.string.insufficient_permissions))) {
-                        showSnackbar(responseMessage);
-                    }
-                    unbindService(this);
-                    serviceBinded = false;
-                }else{
-                    Intent intent= new Intent(this, GeofenceService.class);
-                    bindService(intent, this, Context.BIND_AUTO_CREATE);
-                    geofencingAction = Constants.REMOVE;
-                }
+                startService(Constants.REMOVE);
                 break;
         }
         return true;
@@ -236,16 +206,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i(TAG, "Permission granted.");
-                if (serviceBinded){
-                    String responseMessage = service.addSavedGeofences();
-                    if (responseMessage != null && responseMessage.equals(getString(R.string.insufficient_permissions))){
-                        showSnackbar(responseMessage);
-                    }
-                }else{
-                    Intent intent= new Intent(this, GeofenceService.class);
-                    bindService(intent, this, Context.BIND_AUTO_CREATE);
-                    geofencingAction = Constants.ADD;
-                }
+                startService(Constants.ADD);
             } else {
                 // Permission denied.
 
@@ -258,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 // again" prompts). Therefore, a user interface affordance is typically implemented
                 // when permissions are denied. Otherwise, your app could appear unresponsive to
                 // touches or interactions which have required permissions.
+                Log.e(TAG, "Permission denied.");
                 showSnackbar(R.string.permission_denied_explanation, R.string.settings,
                         new View.OnClickListener() {
                             @Override
@@ -273,10 +235,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                 startActivity(intent);
                             }
                         });
-                if (serviceBinded) {
-                    unbindService(this);
-                    serviceBinded = false;
-                }
             }
         }
     }
