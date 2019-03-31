@@ -29,17 +29,13 @@ import java.util.List;
  */
 public class GeofenceTransitionsJobIntentService extends JobIntentService {
 
-    private static final int JOB_ID = 573;
-
-    private static final String TAG = "GeofenceTransitionsIS";
-
-    private static final String CHANNEL_ID = "channel_01";
+    private static final String TAG = GeofenceTransitionsJobIntentService.class.getSimpleName();
 
     /**
      * Convenience method for enqueuing work in to this service.
      */
     public static void enqueueWork(Context context, Intent intent) {
-        enqueueWork(context, GeofenceTransitionsJobIntentService.class, JOB_ID, intent);
+        enqueueWork(context, GeofenceTransitionsJobIntentService.class, Constants.JOB_ID, intent);
     }
 
     /**
@@ -117,7 +113,7 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
             CharSequence name = getString(R.string.app_name);
             // Create the channel for the notification
             NotificationChannel mChannel =
-                    new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
+                    new NotificationChannel(Constants.CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
 
             // Set the Notification Channel for the Notification Manager.
             mNotificationManager.createNotificationChannel(mChannel);
@@ -143,11 +139,11 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
         // Define the notification settings.
-        builder.setSmallIcon(R.drawable.ic_launcher)
+        builder.setSmallIcon(R.drawable.ic_launcher_nt_round)
                 // In a real app, you may want to use a library like Volley
                 // to decode the Bitmap.
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(),
-                        R.drawable.ic_launcher))
+                        R.drawable.ic_launcher_nt_round))
                 .setColor(Color.RED)
                 .setContentTitle(notificationDetails)
                 .setContentText(getString(R.string.geofence_transition_notification_text))
@@ -155,7 +151,7 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
 
         // Set the Channel ID for Android O.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder.setChannelId(CHANNEL_ID); // Channel ID
+            builder.setChannelId(Constants.CHANNEL_ID); // Channel ID
         }
 
         // Dismiss notification once the user touches it.

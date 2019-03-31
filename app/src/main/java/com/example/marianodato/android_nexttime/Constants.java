@@ -13,9 +13,19 @@ final class Constants {
     private Constants() {
     }
 
-    private static final String PACKAGE_NAME = "com.google.android.gms.location.Geofence";
+    static final int JOB_ID = 573;
+    static final String CHANNEL_ID = "channel_01";
 
+    static final String ADD = "ADD";
+    static final String REMOVE = "REMOVE";
+
+    private static final String PACKAGE_NAME = "com.example.marianodato.android_nexttime";
     static final String GEOFENCES_ADDED_KEY = PACKAGE_NAME + ".GEOFENCES_ADDED_KEY";
+
+    static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    static final String FILTER = "FILTER";
+    static final String KEY = "KEY";
+    static final String PACKAGE = "package";
 
     /**
      * Used to set an expiration time for a geofence. After this amount of time Location Services

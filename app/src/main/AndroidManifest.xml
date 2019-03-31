@@ -7,9 +7,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/ic_launcher_nt_round"
         android:label="@string/app_name"
-        android:theme="@style/Theme.Base">
+        android:theme="@style/AppTheme">
         <meta-data
             android:name="com.example.marianodato.android_nexttime.version"
             android:value="@integer/google_play_services_version" />
@@ -35,7 +35,7 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name="com.example.marianodato.android_nexttime.AddGeofencesService"
+            android:name="com.example.marianodato.android_nexttime.GeofenceService"
             android:label="Test service" />
 
         <!--

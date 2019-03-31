@@ -26,10 +26,13 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-public class AddGeofencesService extends Service implements OnCompleteListener<Void> {
+public class GeofenceService extends Service implements OnCompleteListener<Void> {
     private final IBinder mBinder = new MyBinder();
 
-    private static final String TAG = AddGeofencesService.class.getSimpleName();
+    private static final String TAG = GeofenceService.class.getSimpleName();
+
+    private String responseMessage;
+    private String geofencingAction;
 
     /**
      * Provides access to the Geofencing API.
@@ -45,7 +48,6 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
      * Used when requesting to add or remove geofences.
      */
     private PendingIntent mGeofencePendingIntent;
-    private String responseMessage;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -58,8 +60,8 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
     }
 
     public class MyBinder extends Binder {
-        AddGeofencesService getService() {
-            return AddGeofencesService.this;
+        GeofenceService getService() {
+            return GeofenceService.this;
         }
     }
 
@@ -75,6 +77,15 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
         mGeofencingClient = LocationServices.getGeofencingClient(this);
 
         addGeofences();
+        return responseMessage;
+    }
+
+    public String removeSavedGeofences() {
+        // Initially set the PendingIntent used in addGeofences() and removeGeofences() to null.
+        mGeofencePendingIntent = null;
+
+        mGeofencingClient = LocationServices.getGeofencingClient(this);
+        removeGeofences();
         return responseMessage;
     }
 
@@ -123,8 +134,25 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
             return;
         }
 
+        geofencingAction = Constants.ADD;
         mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
                 .addOnCompleteListener(this);
+    }
+
+    /**
+     * Removes geofences. This method should be called after the user has granted the location
+     * permission.
+     */
+    @SuppressWarnings("MissingPermission")
+    private void removeGeofences() {
+        if (!checkPermissions()) {
+            responseMessage = getString(R.string.insufficient_permissions);
+            Log.w(TAG, responseMessage);
+            return;
+        }
+
+        geofencingAction = Constants.REMOVE;
+        mGeofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(this);
     }
 
     /**
@@ -173,20 +201,24 @@ public class AddGeofencesService extends Service implements OnCompleteListener<V
     @Override
     public void onComplete(@NonNull Task<Void> task) {
         if (task.isSuccessful()) {
-            updateGeofencesAdded(true);
+            if(geofencingAction.equals(Constants.ADD)){
+                updateGeofencesAdded(true);
+            }else{
+                updateGeofencesAdded(false);
+            }
 
             int messageId = getGeofencesAdded() ? R.string.geofences_added :
                     R.string.geofences_removed;
             Log.w(TAG, getString(messageId));
             LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(
-                    new Intent(MainActivity.FILTER).putExtra(MainActivity.KEY, getString(messageId))
+                    new Intent(Constants.FILTER).putExtra(Constants.KEY, getString(messageId))
             );
         } else {
             // Get the status code for the error and log it using a user-friendly message.
             String errorMessage = GeofenceErrorMessages.getErrorString(this, task.getException());
             Log.w(TAG, errorMessage);
             LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(
-                    new Intent(MainActivity.FILTER).putExtra(MainActivity.KEY, errorMessage)
+                    new Intent(Constants.FILTER).putExtra(Constants.KEY, errorMessage)
             );
         }
     }
