@@ -1,2 +1,2 @@
 # android-NextTime
-Android NextTime Project.
+Android NextTime project using geofencing.
